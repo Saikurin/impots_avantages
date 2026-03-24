@@ -1,0 +1,16 @@
+:root {
+  color-scheme: light;
+  font-family: Georgia, "Times New Roman", serif;
+  background: linear-gradient(180deg, #eef4f8 0%, #f8fbfd 100%);
+  color: #16324a;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+}
