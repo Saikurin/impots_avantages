@@ -15,6 +15,7 @@ from apps.bundles.frais_kilometriques.models import (
     Vehicule,
 )
 from apps.bundles.frais_kilometriques.services.baremes import apply_bareme
+from apps.bundles.frais_kilometriques.services.cantine import compute_deductible_cantine
 from apps.bundles.frais_kilometriques.services.distances import (
     geocode_domicile_if_needed,
     geocode_site_if_needed,
@@ -114,6 +115,8 @@ def _serialize_jour(jour: JourTravaille) -> dict:
         "vehicule_id": jour.vehicule_id,
         "distance_km": float(jour.distance_km),
         "montant_eur": float(jour.montant_eur),
+        "frais_cantine_eur": float(jour.frais_cantine_eur),
+        "montant_deductible_cantine_eur": float(jour.montant_deductible_cantine_eur),
         "commentaire": jour.commentaire,
         "created_at": jour.created_at.isoformat(),
         "updated_at": jour.updated_at.isoformat(),
@@ -131,6 +134,11 @@ def _serialize_resultat(simulation: SimulationFraisKilometriques, *, year: int |
     jours_teletravail = [jour for jour in jours if jour.type_jour == JourTravaille.TypeJour.TELETRAVAIL]
     jours_conges = [jour for jour in jours if jour.type_jour == JourTravaille.TypeJour.CONGES]
     total_km_decimal = sum((jour.distance_km for jour in jours), Decimal("0.00"))
+    total_cantine_deductible_decimal = sum(
+        (jour.montant_deductible_cantine_eur for jour in jours),
+        Decimal("0.00"),
+    )
+    total_deductible_global_decimal = total_cantine_deductible_decimal
     total_km = round(float(total_km_decimal), 2)
 
     details_vehicules = []
@@ -140,6 +148,7 @@ def _serialize_resultat(simulation: SimulationFraisKilometriques, *, year: int |
         total_km_vehicule = sum((jour.distance_km for jour in jours_vehicule), Decimal("0.00"))
         bareme = apply_bareme(vehicule=vehicule, total_km=total_km_vehicule)
         montant_total += bareme["montant_total_eur"]
+        total_deductible_global_decimal += bareme["montant_total_eur"]
         details_vehicules.append(
             {
                 "vehicule": _serialize_vehicule(vehicule),
@@ -165,6 +174,8 @@ def _serialize_resultat(simulation: SimulationFraisKilometriques, *, year: int |
             "jours_conges": len(jours_conges),
             "total_km": total_km,
             "montant_total_eur": float(montant_total),
+            "total_cantine_deductible_eur": float(total_cantine_deductible_decimal),
+            "total_deductible_global_eur": float(total_deductible_global_decimal),
         },
         "vehicules": details_vehicules,
         "jours": [_serialize_jour(jour) for jour in jours],
@@ -434,6 +445,7 @@ def simulation_calendrier(request: HttpRequest, simulation_id: int) -> JsonRespo
     site_travail_id = payload.get("site_travail_id")
     vehicule_id = payload.get("vehicule_id")
     commentaire = (payload.get("commentaire") or "").strip()
+    frais_cantine_value = payload.get("frais_cantine_eur", 0)
 
     if not date_value or type_jour not in {JourTravaille.TypeJour.SITE, JourTravaille.TypeJour.TELETRAVAIL, JourTravaille.TypeJour.CONGES}:
         return JsonResponse({"detail": "Les champs date et type_jour sont obligatoires."}, status=400)
@@ -443,6 +455,8 @@ def simulation_calendrier(request: HttpRequest, simulation_id: int) -> JsonRespo
     vehicule = None
     distance_km = 0
     montant_eur = 0
+    frais_cantine_eur = Decimal(str(frais_cantine_value or 0)).quantize(Decimal("0.01"))
+    montant_deductible_cantine_eur = Decimal("0.00")
 
     if vehicule_id and type_jour != JourTravaille.TypeJour.CONGES:
         vehicule = simulation.vehicules.filter(id=vehicule_id).first()
@@ -466,8 +480,11 @@ def simulation_calendrier(request: HttpRequest, simulation_id: int) -> JsonRespo
         except OpenRouteServiceError as exc:
             return JsonResponse({"detail": str(exc)}, status=400)
         distance_km = distance.distance_aller_retour_km
+        montant_deductible_cantine_eur = compute_deductible_cantine(frais_cantine_eur)
     else:
         site = None
+        frais_cantine_eur = Decimal("0.00")
+        montant_deductible_cantine_eur = Decimal("0.00")
 
     if type_jour == JourTravaille.TypeJour.CONGES:
         vehicule = None
@@ -481,6 +498,8 @@ def simulation_calendrier(request: HttpRequest, simulation_id: int) -> JsonRespo
             "vehicule": vehicule,
             "distance_km": distance_km,
             "montant_eur": montant_eur,
+            "frais_cantine_eur": frais_cantine_eur,
+            "montant_deductible_cantine_eur": montant_deductible_cantine_eur,
             "commentaire": commentaire,
         },
     )

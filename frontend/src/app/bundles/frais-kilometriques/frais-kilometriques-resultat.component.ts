@@ -19,6 +19,8 @@ type ResultatResponse = {
     jours_conges: number;
     total_km: number;
     montant_total_eur: number;
+    total_cantine_deductible_eur: number;
+    total_deductible_global_eur: number;
   };
   vehicules: Array<{
     vehicule: {
@@ -41,6 +43,8 @@ type ResultatResponse = {
     date: string;
     type_jour: string;
     distance_km: number;
+    frais_cantine_eur: number;
+    montant_deductible_cantine_eur: number;
     commentaire: string;
   }>;
 };
@@ -106,6 +110,14 @@ type ResultatResponse = {
             <p class="label">Montant estime</p>
             <p class="value">{{ resultat()!.totaux.montant_total_eur | number:'1.0-2' }} EUR</p>
           </article>
+          <article class="stat-card">
+            <p class="label">Cantine deductible</p>
+            <p class="value">{{ resultat()!.totaux.total_cantine_deductible_eur | number:'1.0-2' }} EUR</p>
+          </article>
+          <article class="stat-card stat-card-accent">
+            <p class="label">Total deductible global</p>
+            <p class="value">{{ resultat()!.totaux.total_deductible_global_eur | number:'1.0-2' }} EUR</p>
+          </article>
         </section>
 
         <section class="panel">
@@ -151,6 +163,10 @@ type ResultatResponse = {
                   <p>{{ jour.type_jour }}</p>
                   @if (jour.commentaire) {
                     <p>{{ jour.commentaire }}</p>
+                  }
+                  @if (jour.frais_cantine_eur > 0) {
+                    <p>Cantine : {{ jour.frais_cantine_eur | number:'1.0-2' }} EUR</p>
+                    <p>Deductible : {{ jour.montant_deductible_cantine_eur | number:'1.0-2' }} EUR</p>
                   }
                 </div>
                 <p class="km">{{ jour.distance_km | number:'1.0-2' }} km</p>
