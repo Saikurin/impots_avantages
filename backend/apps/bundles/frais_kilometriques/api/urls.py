@@ -8,6 +8,7 @@ from .views import (
     simulation_distance_site,
     simulation_domicile,
     simulation_import_calendrier,
+    simulation_recalculer,
     simulation_resultat,
     simulation_site_detail,
     simulation_sites,
@@ -48,6 +49,11 @@ urlpatterns = [
         "simulations/<int:simulation_id>/resultat",
         simulation_resultat,
         name="frais-kilometriques-simulation-resultat",
+    ),
+    path(
+        "simulations/<int:simulation_id>/recalculer",
+        simulation_recalculer,
+        name="frais-kilometriques-simulation-recalculer",
     ),
     path(
         "simulations/<int:simulation_id>/calendrier/import",

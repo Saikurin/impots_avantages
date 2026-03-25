@@ -183,7 +183,7 @@ def bundle_placeholder(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["GET", "POST", "DELETE"])
 def simulations_collection(request: HttpRequest) -> JsonResponse:
     if request.method == "GET":
         simulations = SimulationFraisKilometriques.objects.all()[:20]
@@ -192,6 +192,18 @@ def simulations_collection(request: HttpRequest) -> JsonResponse:
                 "items": [_serialize_simulation(simulation) for simulation in simulations],
             }
         )
+
+    if request.method == "DELETE":
+        payload = json.loads(request.body or "{}") if request.body else {}
+        simulation_ids = payload.get("simulation_ids") or []
+        if not isinstance(simulation_ids, list) or not simulation_ids:
+            return JsonResponse(
+                {"detail": "Le champ simulation_ids est obligatoire."},
+                status=400,
+            )
+
+        deleted_count, _ = SimulationFraisKilometriques.objects.filter(id__in=simulation_ids).delete()
+        return JsonResponse({"deleted_count": deleted_count}, status=200)
 
     payload = json.loads(request.body or "{}") if request.body else {}
     current_year = date.today().year
@@ -210,11 +222,16 @@ def simulations_collection(request: HttpRequest) -> JsonResponse:
     return JsonResponse(_serialize_simulation(simulation), status=201)
 
 
-@require_http_methods(["GET"])
+@csrf_exempt
+@require_http_methods(["GET", "DELETE"])
 def simulation_detail(request: HttpRequest, simulation_id: int) -> JsonResponse:
     simulation = SimulationFraisKilometriques.objects.filter(id=simulation_id).first()
     if simulation is None:
         return JsonResponse({"detail": "Simulation introuvable."}, status=404)
+
+    if request.method == "DELETE":
+        simulation.delete()
+        return JsonResponse({"deleted": True}, status=200)
 
     return JsonResponse(_serialize_simulation(simulation))
 
@@ -545,3 +562,53 @@ def simulation_resultat(request: HttpRequest, simulation_id: int) -> JsonRespons
             return JsonResponse({"detail": "Le parametre year doit etre un entier."}, status=400)
 
     return JsonResponse(_serialize_resultat(simulation, year=year))
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def simulation_recalculer(request: HttpRequest, simulation_id: int) -> JsonResponse:
+    simulation = SimulationFraisKilometriques.objects.filter(id=simulation_id).first()
+    if simulation is None:
+        return JsonResponse({"detail": "Simulation introuvable."}, status=404)
+
+    if not hasattr(simulation, "domicile"):
+        return JsonResponse({"detail": "Le domicile est requis pour recalculer la simulation."}, status=400)
+
+    recalculated = 0
+    for jour in simulation.jours_travailles.select_related("site_travail", "vehicule"):
+        if jour.type_jour != JourTravaille.TypeJour.SITE:
+            if jour.distance_km != 0 or jour.montant_eur != 0:
+                jour.distance_km = 0
+                jour.montant_eur = 0
+                jour.save(update_fields=["distance_km", "montant_eur", "updated_at"])
+            continue
+
+        if jour.site_travail is None:
+            continue
+
+        if jour.vehicule is None:
+            continue
+
+        if jour.vehicule.date_achat and jour.date < jour.vehicule.date_achat:
+            continue
+        if jour.vehicule.date_vente and jour.date > jour.vehicule.date_vente:
+            continue
+
+        try:
+            distance = get_or_compute_distance(domicile=simulation.domicile, site=jour.site_travail)
+        except OpenRouteServiceError as exc:
+            return JsonResponse({"detail": str(exc)}, status=400)
+
+        jour.distance_km = distance.distance_aller_retour_km
+        jour.montant_eur = 0
+        jour.save(update_fields=["distance_km", "montant_eur", "updated_at"])
+        recalculated += 1
+
+    return JsonResponse(
+        {
+            "detail": "Simulation recalculee.",
+            "recalculated_days": recalculated,
+            "resultat": _serialize_resultat(simulation),
+        },
+        status=200,
+    )
