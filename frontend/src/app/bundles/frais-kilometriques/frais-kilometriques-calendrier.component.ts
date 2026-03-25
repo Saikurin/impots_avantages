@@ -49,6 +49,29 @@ type JourResponse = {
           <span class="legend-item"><i class="dot conges"></i>Conges</span>
         </div>
 
+        <div class="summary-grid">
+          <article class="summary-card">
+            <p class="summary-label">Jours declares</p>
+            <p class="summary-value">{{ jours().length }}</p>
+          </article>
+          <article class="summary-card">
+            <p class="summary-label">Sur site</p>
+            <p class="summary-value">{{ siteDaysCount() }}</p>
+          </article>
+          <article class="summary-card">
+            <p class="summary-label">Teletravail</p>
+            <p class="summary-value">{{ teletravailDaysCount() }}</p>
+          </article>
+          <article class="summary-card">
+            <p class="summary-label">Conges</p>
+            <p class="summary-value">{{ congesDaysCount() }}</p>
+          </article>
+          <article class="summary-card summary-card-accent">
+            <p class="summary-label">Total km</p>
+            <p class="summary-value">{{ totalKm() }}</p>
+          </article>
+        </div>
+
         <div class="import-box">
           <div>
             <p class="import-title">Import Excel</p>
@@ -176,6 +199,12 @@ type JourResponse = {
       .lead,.meta { margin-top: 14px; }
       .detail-km { margin: 10px 0 0; font-weight: 600; }
       .panel-calendar { display: grid; gap: 20px; }
+      .summary-grid { display: grid; gap: 14px; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+      .summary-card { padding: 18px 20px; border-radius: 18px; background: #f7fafc; border: 1px solid rgba(22,50,74,.08); }
+      .summary-card-accent { background: #16324a; }
+      .summary-label { color: #537a96; font-size: .9rem; margin: 0 0 10px; }
+      .summary-value { color: #16324a; font-size: 1.9rem; font-weight: 700; margin: 0; }
+      .summary-card-accent .summary-label, .summary-card-accent .summary-value { color: #f5fbff; }
       .import-box { display: grid; gap: 12px; padding: 18px 20px; border-radius: 18px; background: #f7fafc; border: 1px solid rgba(22,50,74,.08); }
       .import-title { font-weight: 700; color: #16324a; }
       .import-copy { margin-top: 6px; color: #35546c; }
@@ -208,7 +237,8 @@ type JourResponse = {
       :host ::ng-deep .fc { --fc-border-color: rgba(22,50,74,.12); --fc-page-bg-color: #fff; --fc-neutral-bg-color: #f7fafc; --fc-today-bg-color: rgba(45,108,223,.08); --fc-button-bg-color: #16324a; --fc-button-border-color: #16324a; --fc-button-hover-bg-color: #224663; --fc-button-hover-border-color: #224663; --fc-button-active-bg-color: #224663; --fc-button-active-border-color: #224663; }
       :host ::ng-deep .fc .fc-toolbar-title { font-size: 1.15rem; color: #16324a; }
       :host ::ng-deep .fc .fc-daygrid-event { border-radius: 999px; padding: 2px 8px; border: 0; }
-      @media (max-width: 720px) { .page { padding: 18px; } .panel { padding: 24px; } .row { grid-template-columns: 1fr; } .actions,.panel-head { flex-direction: column; align-items: stretch; } }
+      @media (max-width: 900px) { .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+      @media (max-width: 720px) { .page { padding: 18px; } .panel { padding: 24px; } .row, .summary-grid { grid-template-columns: 1fr; } .actions,.panel-head { flex-direction: column; align-items: stretch; } }
     `,
   ],
 })
@@ -228,6 +258,20 @@ export class FraisKilometriquesCalendrierComponent {
   protected readonly importLoading = signal(false);
   protected readonly importMessage = signal('');
   protected readonly importErrors = signal<Array<{ row: number; detail: string }>>([]);
+  protected readonly siteDaysCount = computed(
+    () => this.jours().filter((jour) => jour.type_jour === 'site').length,
+  );
+  protected readonly teletravailDaysCount = computed(
+    () => this.jours().filter((jour) => jour.type_jour === 'teletravail').length,
+  );
+  protected readonly congesDaysCount = computed(
+    () => this.jours().filter((jour) => jour.type_jour === 'conges').length,
+  );
+  protected readonly totalKm = computed(() =>
+    this.jours()
+      .reduce((sum, jour) => sum + jour.distance_km, 0)
+      .toFixed(2),
+  );
 
   protected readonly form = {
     date: '',

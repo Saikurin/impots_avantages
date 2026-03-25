@@ -77,6 +77,15 @@ Tu n'as besoin de rebuild que si tu changes :
 - frontend : `docker compose exec frontend npm run lint`
 - les deux : `./lint.sh`
 
+## Tests
+
+- tests backend bundle : `docker compose exec backend python manage.py test apps.bundles.frais_kilometriques.tests`
+- tests E2E Playwright :
+
+```bash
+docker run --rm -v "$(pwd)/frontend:/work" -w /work mcr.microsoft.com/playwright:v1.58.2-jammy sh -lc "npm install && npx playwright test"
+```
+
 ## Premiere feature bundle
 
 Le premier slice reel du bundle est en place :
@@ -116,3 +125,9 @@ La base du calcul GPS est maintenant en place :
 - geocodage des adresses domicile et site quand une cle OpenRouteService est disponible
 - cache local de distance dans `DistanceTrajet`
 - endpoint backend de calcul d un trajet domicile -> site
+
+Ameliorations recentes du bundle :
+- synthese avec filtre par annee
+- lazy loading des jours au scroll sur la page resultat
+- resume visuel sur le calendrier
+- base de tests backend sur les baremes et la synthese resultat
