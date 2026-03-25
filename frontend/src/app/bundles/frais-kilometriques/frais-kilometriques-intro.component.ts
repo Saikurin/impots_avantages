@@ -1,5 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
 type SimulationResponse = {
@@ -36,6 +36,14 @@ type SimulationResponse = {
           <button type="button" class="ghost" (click)="loadSimulations()" [disabled]="loading()">
             Recharger les brouillons
           </button>
+          <button
+            type="button"
+            class="danger"
+            (click)="deleteSelectedSimulations()"
+            [disabled]="loading() || !selectedSimulationIds().length"
+          >
+            Supprimer la selection
+          </button>
         </div>
 
         @if (errorMessage()) {
@@ -71,6 +79,14 @@ type SimulationResponse = {
           <div class="list">
             @for (simulation of simulations(); track simulation.id) {
               <article class="card">
+                <label class="selection-row">
+                  <input
+                    type="checkbox"
+                    [checked]="selectedSimulationIds().includes(simulation.id)"
+                    (change)="toggleSimulationSelection(simulation.id, $event)"
+                  />
+                  <span>Selectionner ce brouillon</span>
+                </label>
                 <p class="card-title">Simulation #{{ simulation.id }}</p>
                 <p>Annee fiscale : {{ simulation.annee_fiscale }}</p>
                 <p>Statut : {{ simulation.statut }}</p>
@@ -83,6 +99,9 @@ type SimulationResponse = {
                 <div class="card-actions">
                   <button type="button" class="ghost" (click)="resumeSimulation(simulation)">
                     {{ getResumeLabel(simulation) }}
+                  </button>
+                  <button type="button" class="danger" (click)="deleteSimulation(simulation.id)">
+                    Supprimer
                   </button>
                 </div>
               </article>
@@ -173,6 +192,10 @@ type SimulationResponse = {
         color: #16324a;
       }
 
+      button.danger {
+        background: #a12f2f;
+      }
+
       button:disabled {
         opacity: 0.7;
         cursor: wait;
@@ -226,6 +249,15 @@ type SimulationResponse = {
         border: 1px solid rgba(22, 50, 74, 0.08);
       }
 
+      .selection-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 12px;
+        color: #537a96;
+        font-size: 0.92rem;
+      }
+
       .card-title {
         margin: 0 0 10px;
         font-weight: 700;
@@ -238,6 +270,9 @@ type SimulationResponse = {
 
       .card-actions {
         margin-top: 14px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
       }
 
       @media (max-width: 720px) {
@@ -265,6 +300,7 @@ export class FraisKilometriquesIntroComponent {
   protected readonly simulations = signal<SimulationResponse[]>([]);
   protected readonly loading = signal(false);
   protected readonly errorMessage = signal('');
+  protected readonly selectedSimulationIds = signal<number[]>([]);
 
   constructor() {
     void this.loadSimulations();
@@ -309,6 +345,7 @@ export class FraisKilometriquesIntroComponent {
 
       const payload = (await response.json()) as { items: SimulationResponse[] };
       this.simulations.set(payload.items);
+      this.selectedSimulationIds.set([]);
     } catch (error) {
       this.errorMessage.set(error instanceof Error ? error.message : 'Erreur inconnue.');
     } finally {
@@ -323,6 +360,69 @@ export class FraisKilometriquesIntroComponent {
     }
 
     await this.resumeSimulation(simulation);
+  }
+
+  protected toggleSimulationSelection(simulationId: number, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    if (checked) {
+      this.selectedSimulationIds.update((items) => [...items, simulationId]);
+      return;
+    }
+
+    this.selectedSimulationIds.update((items) => items.filter((id) => id !== simulationId));
+  }
+
+  protected async deleteSimulation(simulationId: number): Promise<void> {
+    this.loading.set(true);
+    this.errorMessage.set('');
+
+    try {
+      const response = await fetch(`/api/bundles/frais-kilometriques/simulations/${simulationId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Impossible de supprimer le brouillon.');
+      }
+
+      this.simulations.update((items) => items.filter((simulation) => simulation.id !== simulationId));
+      this.selectedSimulationIds.update((items) => items.filter((id) => id !== simulationId));
+    } catch (error) {
+      this.errorMessage.set(error instanceof Error ? error.message : 'Erreur inconnue.');
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  protected async deleteSelectedSimulations(): Promise<void> {
+    const ids = this.selectedSimulationIds();
+    if (!ids.length) {
+      return;
+    }
+
+    this.loading.set(true);
+    this.errorMessage.set('');
+
+    try {
+      const response = await fetch('/api/bundles/frais-kilometriques/simulations', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ simulation_ids: ids }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Impossible de supprimer la selection.');
+      }
+
+      this.simulations.update((items) => items.filter((simulation) => !ids.includes(simulation.id)));
+      this.selectedSimulationIds.set([]);
+    } catch (error) {
+      this.errorMessage.set(error instanceof Error ? error.message : 'Erreur inconnue.');
+    } finally {
+      this.loading.set(false);
+    }
   }
 
   protected getResumeLabel(simulation: SimulationResponse): string {
@@ -354,8 +454,6 @@ export class FraisKilometriquesIntroComponent {
       nextPath = ['/bundles/frais-kilometriques', simulation.id, 'sites'];
     } else if (simulation.vehicules_count === 0) {
       nextPath = ['/bundles/frais-kilometriques', simulation.id, 'vehicule'];
-    } else if (simulation.jours_count === 0) {
-      nextPath = ['/bundles/frais-kilometriques', simulation.id, 'calendrier'];
     } else {
       nextPath = ['/bundles/frais-kilometriques', simulation.id, 'calendrier'];
     }

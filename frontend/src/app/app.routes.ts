@@ -9,9 +9,9 @@ export const appRoutes: Routes = [
   },
   {
     path: 'bundles/frais-kilometriques',
-    loadChildren: () =>
+    loadChildren: (): Promise<Routes> =>
       import('./bundles/frais-kilometriques/frais-kilometriques.routes').then(
-        (module) => module.fraisKilometriquesRoutes,
+        (module) => module.fraisKilometriquesRoutes as Routes,
       ),
   },
 ];

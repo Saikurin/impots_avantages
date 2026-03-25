@@ -76,6 +76,10 @@ type ResultatResponse = {
         <section class="panel"><p class="error">{{ errorMessage() }}</p></section>
       }
 
+      @if (successMessage()) {
+        <section class="panel"><p class="success">{{ successMessage() }}</p></section>
+      }
+
       @if (resultat()) {
         <section class="panel stats">
           <article class="stat-card">
@@ -107,6 +111,9 @@ type ResultatResponse = {
         <section class="panel">
           <div class="panel-head">
             <h2>Baremes appliques</h2>
+            <button type="button" class="recalculate-button" (click)="recalculate()" [disabled]="recalculating()">
+              {{ recalculating() ? 'Recalcul...' : 'Recalculer la simulation' }}
+            </button>
           </div>
 
           @if (resultat()!.vehicules.length) {
@@ -167,7 +174,7 @@ type ResultatResponse = {
       .eyebrow { margin: 0 0 10px; color: #537a96; text-transform: uppercase; letter-spacing: .12em; font-size: .78rem; }
       h1,h2,p { margin: 0; }
       h1,h2,.value,.row-title { color: #16324a; }
-      .lead,.meta,.label,.row-card p,a,.error,.filter-box span { color: #35546c; }
+      .lead,.meta,.label,.row-card p,a,.error,.success,.filter-box span { color: #35546c; }
       .lead,.meta { margin-top: 14px; }
       .filter-box { margin-top: 22px; max-width: 260px; }
       .filter-box label { display: grid; gap: 8px; }
@@ -182,6 +189,7 @@ type ResultatResponse = {
       .label { font-size: .9rem; margin-bottom: 10px; }
       .value { font-size: 2rem; font-weight: 700; }
       .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; }
+      .recalculate-button { min-height: 46px; padding: 0 18px; border: 0; border-radius: 999px; background: #16324a; color: #f5fbff; font-weight: 600; cursor: pointer; }
       .bareme-grid { display: grid; gap: 14px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
       .bareme-card { padding: 18px 20px; border-radius: 18px; background: #f7fafc; border: 1px solid rgba(22,50,74,.08); }
       .list { display: grid; gap: 12px; max-height: 520px; overflow-y: auto; padding-right: 6px; }
@@ -191,6 +199,7 @@ type ResultatResponse = {
       .km { font-weight: 700; white-space: nowrap; }
       a { text-decoration: none; font-weight: 600; }
       .error { font-weight: 600; }
+      .success { font-weight: 600; color: #1d5b45; }
       @media (max-width: 900px) { .stats, .bareme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
       @media (max-width: 720px) { .page { padding: 18px; } .panel { padding: 24px; } .stats, .bareme-grid { grid-template-columns: 1fr; } .panel-head,.row-card { flex-direction: column; align-items: stretch; } }
     `,
@@ -203,6 +212,8 @@ export class FraisKilometriquesResultatComponent {
   protected readonly simulationId = signal<number>(Number(this.route.snapshot.paramMap.get('simulationId') ?? '0'));
   protected readonly resultat = signal<ResultatResponse | null>(null);
   protected readonly errorMessage = signal('');
+  protected readonly successMessage = signal('');
+  protected readonly recalculating = signal(false);
   protected selectedYear: number | null = null;
   protected readonly visibleDaysCount = signal(30);
   protected readonly visibleDays = computed(() => {
@@ -224,6 +235,7 @@ export class FraisKilometriquesResultatComponent {
 
   private async loadResultat(): Promise<void> {
     try {
+      this.errorMessage.set('');
       const query = this.selectedYear ? `?year=${this.selectedYear}` : '';
       const response = await fetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/resultat${query}`);
       if (!response.ok) {
@@ -242,6 +254,36 @@ export class FraisKilometriquesResultatComponent {
   protected async onYearChange(year: number | null): Promise<void> {
     this.selectedYear = year;
     await this.loadResultat();
+  }
+
+  protected async recalculate(): Promise<void> {
+    this.recalculating.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+
+    try {
+      const response = await fetch(
+        `/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/recalculer`,
+        { method: 'POST' },
+      );
+      const payload = (await response.json()) as {
+        detail?: string;
+        recalculated_days?: number;
+      };
+
+      if (!response.ok) {
+        throw new Error(payload.detail ?? 'Impossible de recalculer la simulation.');
+      }
+
+      this.successMessage.set(
+        `${payload.detail ?? 'Simulation recalculee.'} ${payload.recalculated_days ?? 0} jour(s) mis a jour.`,
+      );
+      await this.loadResultat();
+    } catch (error) {
+      this.errorMessage.set(error instanceof Error ? error.message : 'Erreur inconnue.');
+    } finally {
+      this.recalculating.set(false);
+    }
   }
 
   protected onListScroll(event: Event): void {
