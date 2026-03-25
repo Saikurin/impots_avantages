@@ -1,0 +1,77 @@
+from django.urls import path
+
+from .views import (
+    bundle_placeholder,
+    simulation_calendrier,
+    simulation_calendrier_detail,
+    simulation_detail,
+    simulation_distance_site,
+    simulation_domicile,
+    simulation_import_calendrier,
+    simulation_resultat,
+    simulation_site_detail,
+    simulation_sites,
+    simulation_vehicule_detail,
+    simulation_vehicules,
+    simulations_collection,
+)
+
+urlpatterns = [
+    path("", bundle_placeholder, name="frais-kilometriques-placeholder"),
+    path("simulations", simulations_collection, name="frais-kilometriques-simulations"),
+    path(
+        "simulations/<int:simulation_id>",
+        simulation_detail,
+        name="frais-kilometriques-simulation-detail",
+    ),
+    path(
+        "simulations/<int:simulation_id>/domicile",
+        simulation_domicile,
+        name="frais-kilometriques-simulation-domicile",
+    ),
+    path(
+        "simulations/<int:simulation_id>/sites",
+        simulation_sites,
+        name="frais-kilometriques-simulation-sites",
+    ),
+    path(
+        "simulations/<int:simulation_id>/sites/<int:site_id>",
+        simulation_site_detail,
+        name="frais-kilometriques-simulation-site-detail",
+    ),
+    path(
+        "simulations/<int:simulation_id>/sites/<int:site_id>/distance",
+        simulation_distance_site,
+        name="frais-kilometriques-simulation-site-distance",
+    ),
+    path(
+        "simulations/<int:simulation_id>/resultat",
+        simulation_resultat,
+        name="frais-kilometriques-simulation-resultat",
+    ),
+    path(
+        "simulations/<int:simulation_id>/calendrier/import",
+        simulation_import_calendrier,
+        name="frais-kilometriques-simulation-calendrier-import",
+    ),
+    path(
+        "simulations/<int:simulation_id>/vehicules",
+        simulation_vehicules,
+        name="frais-kilometriques-simulation-vehicules",
+    ),
+    path(
+        "simulations/<int:simulation_id>/vehicules/<int:vehicule_id>",
+        simulation_vehicule_detail,
+        name="frais-kilometriques-simulation-vehicule-detail",
+    ),
+    path(
+        "simulations/<int:simulation_id>/calendrier",
+        simulation_calendrier,
+        name="frais-kilometriques-simulation-calendrier",
+    ),
+    path(
+        "simulations/<int:simulation_id>/calendrier/<int:jour_id>",
+        simulation_calendrier_detail,
+        name="frais-kilometriques-simulation-calendrier-detail",
+    ),
+]

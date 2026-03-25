@@ -31,7 +31,9 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
-            "buildTarget": "impots-avantages-frontend:build"
+            "buildTarget": "impots-avantages-frontend:build",
+            "proxyConfig": "proxy.conf.json",
+            "allowedHosts": ["host.docker.internal"]
           }
         }
       }

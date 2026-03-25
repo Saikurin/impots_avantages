@@ -14,5 +14,12 @@ dist/
 # Env
 .env
 
+# IDE
+.idea/
+
 # OS
 .DS_Store
+
+# Local data
+backend/db.sqlite3
+backend/import_test.xlsx
