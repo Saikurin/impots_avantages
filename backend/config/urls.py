@@ -1,7 +1,9 @@
-from django.urls import path
-
-from apps.common.views import hello_world
+from django.urls import include, path
 
 urlpatterns = [
-    path("", hello_world, name="hello-world"),
+    path("", include("apps.common.urls")),
+    path(
+        "api/bundles/frais-kilometriques/",
+        include("apps.bundles.frais_kilometriques.api.urls"),
+    ),
 ]

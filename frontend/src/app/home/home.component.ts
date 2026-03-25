@@ -1,14 +1,20 @@
 import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-home',
   standalone: true,
+  imports: [RouterLink],
   template: `
     <main class="home">
       <section class="card">
         <p class="eyebrow">impots_avantages</p>
         <h1>Hello world</h1>
-        <p>Le frontend Angular est demarre.</p>
+        <p class="copy">Le frontend Angular est demarre.</p>
+        <div class="actions">
+          <a routerLink="/bundles/frais-kilometriques">Ouvrir le bundle initial</a>
+          <span>API Django sur http://localhost:8000/</span>
+        </div>
       </section>
     </main>
   `,
@@ -48,10 +54,36 @@ import { Component } from '@angular/core';
         color: #16324a;
       }
 
-      p {
+      .copy {
         margin: 0;
         font-size: 1.05rem;
         color: #35546c;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 24px;
+        align-items: center;
+      }
+
+      a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0 18px;
+        border-radius: 999px;
+        background: #16324a;
+        color: #f5fbff;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      span {
+        color: #537a96;
+        font-size: 0.95rem;
       }
     `,
   ],

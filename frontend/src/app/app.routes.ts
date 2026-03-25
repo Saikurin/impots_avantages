@@ -7,4 +7,11 @@ export const appRoutes: Routes = [
     path: '',
     component: HomeComponent,
   },
+  {
+    path: 'bundles/frais-kilometriques',
+    loadChildren: () =>
+      import('./bundles/frais-kilometriques/frais-kilometriques.routes').then(
+        (module) => module.fraisKilometriquesRoutes,
+      ),
+  },
 ];

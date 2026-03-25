@@ -3,8 +3,19 @@ services:
     build:
       context: .
       dockerfile: infra/docker/backend/Dockerfile
+    working_dir: /app/backend
+    command: /bin/sh /app/backend/entrypoint.sh
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/app/backend
     ports:
       - "8000:8000"
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      DJANGO_DEBUG: "true"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,0.0.0.0,backend
+      DJANGO_CSRF_TRUSTED_ORIGINS: http://localhost:4200,http://127.0.0.1:4200
 
   frontend:
     build:
@@ -12,5 +23,15 @@ services:
       dockerfile: infra/docker/frontend/Dockerfile
     depends_on:
       - backend
+    working_dir: /app/frontend
+    command: npm start -- --poll 2000
+    env_file:
+      - .env
+    volumes:
+      - ./frontend:/app/frontend
+      - frontend_node_modules:/app/frontend/node_modules
     ports:
       - "4200:4200"
+
+volumes:
+  frontend_node_modules:
