@@ -2,6 +2,8 @@ import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
+import { apiFetch } from '../../core/api/api-fetch';
+
 type SimulationResponse = {
   id: number;
   annee_fiscale: number;
@@ -24,9 +26,9 @@ type SimulationResponse = {
     <main class="page">
       <section class="hero">
         <p class="eyebrow">Premier slice fonctionnel</p>
-        <h1>Frais kilometriques</h1>
+        <h1>Deplacements & repas</h1>
         <p class="lead">
-          Cette premiere etape cree une simulation en brouillon cote Django pour lancer le wizard.
+          Cette premiere etape cree une simulation en brouillon pour suivre tes trajets, tes jours sur site et tes frais de repas.
         </p>
 
         <div class="actions">
@@ -311,7 +313,7 @@ export class FraisKilometriquesIntroComponent {
     this.errorMessage.set('');
 
     try {
-      const response = await fetch('/api/bundles/frais-kilometriques/simulations', {
+      const response = await apiFetch('/api/bundles/frais-kilometriques/simulations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -338,7 +340,7 @@ export class FraisKilometriquesIntroComponent {
     this.errorMessage.set('');
 
     try {
-      const response = await fetch('/api/bundles/frais-kilometriques/simulations');
+      const response = await apiFetch('/api/bundles/frais-kilometriques/simulations');
       if (!response.ok) {
         throw new Error('Impossible de charger les simulations.');
       }
@@ -377,7 +379,7 @@ export class FraisKilometriquesIntroComponent {
     this.errorMessage.set('');
 
     try {
-      const response = await fetch(`/api/bundles/frais-kilometriques/simulations/${simulationId}`, {
+      const response = await apiFetch(`/api/bundles/frais-kilometriques/simulations/${simulationId}`, {
         method: 'DELETE',
       });
 
@@ -404,7 +406,7 @@ export class FraisKilometriquesIntroComponent {
     this.errorMessage.set('');
 
     try {
-      const response = await fetch('/api/bundles/frais-kilometriques/simulations', {
+      const response = await apiFetch('/api/bundles/frais-kilometriques/simulations', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 
 from apps.bundles.frais_kilometriques.models import (
     JourTravaille,
@@ -9,10 +9,12 @@ from apps.bundles.frais_kilometriques.models import (
 )
 
 
+@override_settings(OIDC_BYPASS_AUTH=True)
 class ResultatApiTests(TestCase):
     def setUp(self) -> None:
         self.client = Client()
         self.simulation = SimulationFraisKilometriques.objects.create(
+            owner_sub="test-owner",
             annee_fiscale=2026,
             date_debut_periode="2026-01-01",
             date_fin_periode="2026-12-31",

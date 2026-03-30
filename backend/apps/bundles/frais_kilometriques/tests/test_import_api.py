@@ -2,7 +2,7 @@ from io import BytesIO
 from unittest.mock import patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from openpyxl import Workbook
 
 from apps.bundles.frais_kilometriques.models import (
@@ -13,10 +13,12 @@ from apps.bundles.frais_kilometriques.models import (
 )
 
 
+@override_settings(OIDC_BYPASS_AUTH=True)
 class ImportApiTests(TestCase):
     def setUp(self) -> None:
         self.client = Client()
         self.simulation = SimulationFraisKilometriques.objects.create(
+            owner_sub="test-owner",
             annee_fiscale=2026,
             date_debut_periode="2026-01-01",
             date_fin_periode="2026-12-31",

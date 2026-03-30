@@ -2,6 +2,8 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
+import { apiFetch } from '../../core/api/api-fetch';
+
 type SiteResponse = {
   id: number;
   nom: string;
@@ -350,7 +352,7 @@ export class FraisKilometriquesSitesComponent {
     this.successMessage.set('');
 
     try {
-      const response = await fetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/sites`, {
+      const response = await apiFetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/sites`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -381,7 +383,7 @@ export class FraisKilometriquesSitesComponent {
 
   protected async loadSites(): Promise<void> {
     try {
-      const response = await fetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/sites`);
+      const response = await apiFetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/sites`);
       if (!response.ok) {
         return;
       }
@@ -398,7 +400,7 @@ export class FraisKilometriquesSitesComponent {
     this.successMessage.set('');
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/sites/${siteId}`,
         {
           method: 'DELETE',

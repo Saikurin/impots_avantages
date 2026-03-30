@@ -13,4 +13,9 @@ body {
 
 body {
   min-height: 100vh;
+  background: linear-gradient(180deg, #eef4f8 0%, #f8fbfd 100%);
+}
+
+* {
+  box-sizing: border-box;
 }

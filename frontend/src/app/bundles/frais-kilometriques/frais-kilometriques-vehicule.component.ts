@@ -2,6 +2,8 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
+import { apiFetch } from '../../core/api/api-fetch';
+
 type VehiculeResponse = {
   id: number;
   marque: string;
@@ -377,7 +379,7 @@ export class FraisKilometriquesVehiculeComponent {
     this.successMessage.set('');
 
     try {
-      const response = await fetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/vehicules`, {
+      const response = await apiFetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/vehicules`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -413,7 +415,7 @@ export class FraisKilometriquesVehiculeComponent {
 
   protected async loadVehicules(): Promise<void> {
     try {
-      const response = await fetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/vehicules`);
+      const response = await apiFetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/vehicules`);
       if (!response.ok) {
         return;
       }
@@ -430,7 +432,7 @@ export class FraisKilometriquesVehiculeComponent {
     this.successMessage.set('');
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/vehicules/${vehiculeId}`,
         {
           method: 'DELETE',

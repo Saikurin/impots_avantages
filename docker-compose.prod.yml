@@ -1,0 +1,72 @@
+services:
+  keycloak-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${KEYCLOAK_DB_NAME:-keycloak}
+      POSTGRES_USER: ${KEYCLOAK_DB_USER:-keycloak}
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak}
+    volumes:
+      - keycloak_db_data:/var/lib/postgresql/data
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.5
+    restart: unless-stopped
+    command: start --http-enabled=true --import-realm
+    env_file:
+      - .env
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/${KEYCLOAK_DB_NAME:-keycloak}
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USER:-keycloak}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak}
+      KC_PROXY_HEADERS: xforwarded
+      KC_HOSTNAME_STRICT: false
+    depends_on:
+      - keycloak-db
+    volumes:
+      - ./infra/keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    ports:
+      - "8080:8080"
+
+  backend:
+    build:
+      context: .
+      dockerfile: infra/docker/backend/prod/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.prod
+      DJANGO_DEBUG: "false"
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
+      DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS}
+      KEYCLOAK_BASE_URL: http://keycloak:8080
+      KEYCLOAK_FRONTEND_URL: ${KEYCLOAK_FRONTEND_URL}
+    depends_on:
+      - keycloak
+    volumes:
+      - backend_data:/app/backend/data
+
+  frontend:
+    build:
+      context: .
+      dockerfile: infra/docker/frontend/prod/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      API_PROXY_PASS: http://backend:8000
+      KEYCLOAK_FRONTEND_URL: ${KEYCLOAK_FRONTEND_URL}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID}
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  keycloak_db_data:
+  backend_data:

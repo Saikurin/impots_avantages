@@ -6,6 +6,8 @@ import { CalendarOptions, EventClickArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction';
 
+import { apiFetch } from '../../core/api/api-fetch';
+
 type SiteOption = {
   id: number;
   nom: string;
@@ -383,7 +385,7 @@ export class FraisKilometriquesCalendrierComponent {
       const savedDays: JourResponse[] = [];
 
       for (const currentDate of dates) {
-        const response = await fetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/calendrier`, {
+        const response = await apiFetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/calendrier`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -439,7 +441,7 @@ export class FraisKilometriquesCalendrierComponent {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/calendrier/import`, {
+      const response = await apiFetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/calendrier/import`, {
         method: 'POST',
         body: formData,
       });
@@ -463,7 +465,7 @@ export class FraisKilometriquesCalendrierComponent {
     this.errorMessage.set('');
     this.successMessage.set('');
     try {
-      const response = await fetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/calendrier/${jourId}`, { method: 'DELETE' });
+      const response = await apiFetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/calendrier/${jourId}`, { method: 'DELETE' });
       if (!response.ok) {
         const payload = (await response.json()) as { detail?: string };
         throw new Error(payload.detail ?? 'Impossible de supprimer le jour.');
@@ -528,21 +530,21 @@ export class FraisKilometriquesCalendrierComponent {
   }
 
   private async loadJours(): Promise<void> {
-    const response = await fetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/calendrier`);
+    const response = await apiFetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/calendrier`);
     if (!response.ok) return;
     const payload = (await response.json()) as { items: JourResponse[] };
     this.jours.set(payload.items);
   }
 
   private async loadSites(): Promise<void> {
-    const response = await fetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/sites`);
+    const response = await apiFetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/sites`);
     if (!response.ok) return;
     const payload = (await response.json()) as { items: SiteOption[] };
     this.sites.set(payload.items);
   }
 
   private async loadVehicules(): Promise<void> {
-    const response = await fetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/vehicules`);
+    const response = await apiFetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/vehicules`);
     if (!response.ok) return;
     const payload = (await response.json()) as { items: VehiculeOption[] };
     this.vehicules.set(payload.items);

@@ -36,6 +36,7 @@ Tu n'as besoin de rebuild que si tu changes :
 
 - Frontend Angular : `http://localhost:4200`
 - Backend Django : `http://localhost:8000/`
+- Keycloak : `http://localhost:8080`
 - Healthcheck Django : `http://localhost:8000/health/`
 - Placeholder bundle backend : `http://localhost:8000/api/bundles/frais-kilometriques/`
 - Placeholder bundle frontend : `http://localhost:4200/bundles/frais-kilometriques`
@@ -70,6 +71,14 @@ Tu n'as besoin de rebuild que si tu changes :
 - ensuite : `docker compose up`
 - si tu modifies du code backend ou frontend, pas besoin de rebuild
 - si tu modifies `docker-compose.yml`, relance avec `docker compose up -d`
+
+## OAuth / OIDC
+
+- Authorization Server : Keycloak
+- realm : `impots-avantages`
+- client SPA enregistre : `impots-avantages-spa`
+- toute route `/api/bundles/...` exige maintenant un `Authorization: Bearer <token>` valide emis pour un client autorise
+- en dev, cree un compte dans Keycloak ou via l ecran de login si l inscription est active
 
 ## Lint
 

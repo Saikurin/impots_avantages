@@ -1,4 +1,17 @@
 services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.5
+    command: start-dev --import-realm
+    env_file:
+      - .env
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+    volumes:
+      - ./infra/keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    ports:
+      - "8080:8080"
+
   backend:
     build:
       context: .
@@ -16,6 +29,8 @@ services:
       DJANGO_DEBUG: "true"
       DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,0.0.0.0,backend
       DJANGO_CSRF_TRUSTED_ORIGINS: http://localhost:4200,http://127.0.0.1:4200
+    depends_on:
+      - keycloak
 
   frontend:
     build:
@@ -23,6 +38,7 @@ services:
       dockerfile: infra/docker/frontend/Dockerfile
     depends_on:
       - backend
+      - keycloak
     working_dir: /app/frontend
     command: npm start -- --poll 2000
     env_file:

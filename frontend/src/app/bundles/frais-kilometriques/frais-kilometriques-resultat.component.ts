@@ -3,6 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 
+import { apiFetch } from '../../core/api/api-fetch';
+
 type ResultatResponse = {
   simulation: {
     id: number;
@@ -237,7 +239,7 @@ export class FraisKilometriquesResultatComponent {
     try {
       this.errorMessage.set('');
       const query = this.selectedYear ? `?year=${this.selectedYear}` : '';
-      const response = await fetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/resultat${query}`);
+      const response = await apiFetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/resultat${query}`);
       if (!response.ok) {
         const payload = (await response.json()) as { detail?: string };
         throw new Error(payload.detail ?? 'Impossible de charger le resultat.');
@@ -262,7 +264,7 @@ export class FraisKilometriquesResultatComponent {
     this.successMessage.set('');
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/recalculer`,
         { method: 'POST' },
       );

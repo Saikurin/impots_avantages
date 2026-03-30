@@ -10,27 +10,42 @@ import { RouterLink } from '@angular/router';
       <section class="hero">
         <div class="hero-copy">
           <p class="eyebrow">impots_avantages</p>
-          <h1>Simule tes avantages fiscaux sans te perdre dans la declaration.</h1>
+          <h1>Reprends la main sur ta déclaration et repère ce que tu peux vraiment déduire.</h1>
           <p class="copy">
-            Le premier bundle MVP t'aide a suivre tes frais kilometriques, tes jours sur site,
-            le teletravail, les conges et le bareme applique a ton vehicule.
+            Fisceo transforme tes trajets, tes repas et tes jours travaillés en une simulation claire,
+            sérieuse et directement exploitable pour tes frais réels.
           </p>
 
           <div class="hero-actions">
-            <a class="primary-action" routerLink="/bundles/frais-kilometriques">Commencer le bundle frais kilometriques</a>
-            <span class="api-badge">API active sur http://localhost:8000/</span>
+            <a class="primary-action" routerLink="/bundles/frais-kilometriques">Commencer le bundle Deplacements & repas</a>
+            <span class="api-badge">Domicile, sites, véhicule, cantine et synthèse déductible</span>
           </div>
         </div>
 
         <aside class="hero-panel">
-          <p class="panel-label">Bundle disponible</p>
-          <h2>Frais kilometriques</h2>
-          <ul>
-            <li>Domicile, sites et vehicules</li>
-            <li>Calendrier interactif avec import Excel</li>
-            <li>Calcul des km et synthese fiscale</li>
-          </ul>
-          <a class="secondary-action" routerLink="/bundles/frais-kilometriques">Acceder au bundle</a>
+          <div class="illustration-card illustration-card-primary">
+            <p class="panel-label">Parcours guide</p>
+            <h2>Un seul espace pour piloter tes déplacements et tes repas.</h2>
+            <p>
+              Renseigne ta situation, visualise ton calendrier, importe ton historique et laisse
+              Fisceo consolider automatiquement les montants déductibles.
+            </p>
+          </div>
+
+          <div class="illustration-grid">
+            <article class="illustration-card">
+              <p class="illustration-value">1</p>
+              <p class="illustration-text">bundle métier déjà prêt à l'emploi</p>
+            </article>
+            <article class="illustration-card">
+              <p class="illustration-value">3</p>
+              <p class="illustration-text">types de journées gérés : site, télétravail, congés</p>
+            </article>
+            <article class="illustration-card">
+              <p class="illustration-value">2</p>
+              <p class="illustration-text">sources de déduction : kilomètres et repas</p>
+            </article>
+          </div>
         </aside>
       </section>
 
@@ -61,10 +76,10 @@ import { RouterLink } from '@angular/router';
         min-height: 100vh;
         display: grid;
         gap: 24px;
-        padding: 28px;
+        padding: 32px 28px 40px;
         background:
-          radial-gradient(circle at top left, rgba(92, 145, 184, 0.18), transparent 28%),
-          radial-gradient(circle at bottom right, rgba(78, 143, 118, 0.14), transparent 30%),
+          radial-gradient(circle at top left, rgba(56, 115, 151, 0.22), transparent 26%),
+          radial-gradient(circle at 85% 15%, rgba(74, 145, 118, 0.12), transparent 24%),
           linear-gradient(180deg, #edf4f8 0%, #f8fbfd 100%);
       }
 
@@ -86,14 +101,22 @@ import { RouterLink } from '@angular/router';
       .highlight-card {
         padding: 36px;
         border-radius: 28px;
-        background: rgba(255, 255, 255, 0.9);
-        border: 1px solid rgba(22, 50, 74, 0.1);
-        box-shadow: 0 24px 60px rgba(22, 50, 74, 0.08);
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(22, 50, 74, 0.08);
+        box-shadow: 0 28px 80px rgba(22, 50, 74, 0.08);
+      }
+
+      .hero-copy {
+        display: grid;
+        align-content: center;
+        background:
+          radial-gradient(circle at top right, rgba(34, 99, 138, 0.08), transparent 28%),
+          rgba(255, 255, 255, 0.94);
       }
 
       .eyebrow {
         margin: 0 0 12px;
-        color: #537a96;
+        color: #4a768d;
         text-transform: uppercase;
         letter-spacing: 0.12em;
         font-size: 0.8rem;
@@ -129,18 +152,28 @@ import { RouterLink } from '@angular/router';
         align-items: center;
         justify-content: center;
         min-height: 48px;
-        padding: 0 20px;
+        padding: 0 22px;
         border-radius: 999px;
-        background: #16324a;
+        background: linear-gradient(135deg, #16324a 0%, #2a587a 100%);
         color: #f5fbff;
         text-decoration: none;
         font-weight: 600;
+        box-shadow: 0 14px 28px rgba(22, 50, 74, 0.16);
+        transition: transform 160ms ease, box-shadow 160ms ease;
+      }
+
+      .primary-action:hover,
+      .secondary-action:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 18px 36px rgba(22, 50, 74, 0.18);
       }
 
       .secondary-action {
-        width: 100%;
         margin-top: 18px;
-        background: #1d5b45;
+        background: linear-gradient(135deg, #2f7864 0%, #1d5b45 100%);
+        width: fit-content;
+        max-width: 100%;
+        align-self: start;
       }
 
       .api-badge,
@@ -156,11 +189,44 @@ import { RouterLink } from '@angular/router';
         color: #16324a;
       }
 
-      .hero-panel ul {
-        margin: 18px 0 0;
-        padding-left: 20px;
+      .hero-panel {
+        display: grid;
+        gap: 16px;
+      }
+
+      .illustration-grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .illustration-card {
+        position: relative;
+        overflow: hidden;
+        padding: 22px;
+        border-radius: 22px;
+        background: rgba(247, 250, 252, 0.96);
+        border: 1px solid rgba(22, 50, 74, 0.08);
+      }
+
+      .illustration-card-primary {
+        background:
+          radial-gradient(circle at top right, rgba(47, 120, 100, 0.12), transparent 30%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(244, 249, 251, 0.96) 100%);
+      }
+
+      .illustration-card-primary p:last-child,
+      .illustration-text {
+        margin: 12px 0 0;
         color: #35546c;
-        line-height: 1.8;
+        line-height: 1.55;
+      }
+
+      .illustration-value {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 800;
+        color: #16324a;
       }
 
       .highlights {
@@ -175,7 +241,25 @@ import { RouterLink } from '@angular/router';
         line-height: 1.6;
       }
 
+      .highlight-card {
+        position: relative;
+      }
+
+      .highlight-card::before {
+        content: '';
+        display: block;
+        width: 42px;
+        height: 4px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #2a587a 0%, #4b8f96 100%);
+        margin-bottom: 18px;
+      }
+
       @media (max-width: 920px) {
+        .home {
+          padding-top: 22px;
+        }
+
         .hero {
           grid-template-columns: 1fr;
         }
@@ -184,20 +268,61 @@ import { RouterLink } from '@angular/router';
           grid-template-columns: 1fr;
         }
 
+        .illustration-grid {
+          grid-template-columns: 1fr;
+        }
+
         h1 {
           max-width: none;
+          font-size: clamp(2.4rem, 7vw, 4rem);
+        }
+
+        .hero-actions {
+          gap: 12px;
+        }
+
+        .primary-action,
+        .secondary-action {
+          width: fit-content;
+          max-width: 100%;
         }
       }
 
       @media (max-width: 640px) {
         .home {
-          padding: 18px;
+          padding: 16px 16px 28px;
         }
 
         .hero-copy,
         .hero-panel,
         .highlight-card {
-          padding: 26px;
+          padding: 22px;
+          border-radius: 22px;
+        }
+
+        h1 {
+          font-size: 2.2rem;
+          line-height: 1;
+        }
+
+        .copy,
+        .highlight-card p,
+        .hero-panel ul {
+          font-size: 0.98rem;
+        }
+
+        .hero-actions {
+          display: grid;
+          gap: 10px;
+        }
+
+        .primary-action,
+        .secondary-action {
+          width: 100%;
+        }
+
+        .api-badge {
+          font-size: 0.88rem;
         }
       }
     `,

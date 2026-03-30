@@ -2,6 +2,8 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
+import { apiFetch } from '../../core/api/api-fetch';
+
 type DomicileResponse = {
   id: number;
   libelle: string;
@@ -268,7 +270,7 @@ export class FraisKilometriquesDomicileComponent {
 
   protected async load(): Promise<void> {
     try {
-      const response = await fetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/domicile`);
+      const response = await apiFetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/domicile`);
       if (!response.ok) {
         return;
       }
@@ -292,7 +294,7 @@ export class FraisKilometriquesDomicileComponent {
     this.successMessage.set('');
 
     try {
-      const response = await fetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/domicile`, {
+      const response = await apiFetch(`/api/bundles/frais-kilometriques/simulations/${this.simulationId()}/domicile`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

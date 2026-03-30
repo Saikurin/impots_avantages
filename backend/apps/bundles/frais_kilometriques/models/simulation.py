@@ -7,6 +7,7 @@ class SimulationFraisKilometriques(models.Model):
         COMPLETEE = "completee", "Completee"
         CALCULEE = "calculee", "Calculee"
 
+    owner_sub = models.CharField(max_length=255, db_index=True)
     annee_fiscale = models.PositiveSmallIntegerField()
     date_debut_periode = models.DateField()
     date_fin_periode = models.DateField()

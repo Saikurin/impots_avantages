@@ -43,6 +43,25 @@ def _serialize_simulation(simulation: SimulationFraisKilometriques) -> dict:
     }
 
 
+def _get_owner_sub(request: HttpRequest) -> str | None:
+    principal = getattr(request, "oauth_principal", None)
+    if principal is None:
+        return None
+    return principal.subject
+
+
+def _get_simulations_queryset(request: HttpRequest):
+    owner_sub = _get_owner_sub(request)
+    queryset = SimulationFraisKilometriques.objects.all()
+    if owner_sub is not None:
+        queryset = queryset.filter(owner_sub=owner_sub)
+    return queryset
+
+
+def _get_simulation_or_none(request: HttpRequest, simulation_id: int):
+    return _get_simulations_queryset(request).filter(id=simulation_id).first()
+
+
 def _serialize_domicile(domicile: AdresseDomicile) -> dict:
     return {
         "id": domicile.id,
@@ -186,7 +205,7 @@ def bundle_placeholder(request: HttpRequest) -> JsonResponse:
 @require_http_methods(["GET", "POST", "DELETE"])
 def simulations_collection(request: HttpRequest) -> JsonResponse:
     if request.method == "GET":
-        simulations = SimulationFraisKilometriques.objects.all()[:20]
+        simulations = _get_simulations_queryset(request)[:20]
         return JsonResponse(
             {
                 "items": [_serialize_simulation(simulation) for simulation in simulations],
@@ -202,7 +221,7 @@ def simulations_collection(request: HttpRequest) -> JsonResponse:
                 status=400,
             )
 
-        deleted_count, _ = SimulationFraisKilometriques.objects.filter(id__in=simulation_ids).delete()
+        deleted_count, _ = _get_simulations_queryset(request).filter(id__in=simulation_ids).delete()
         return JsonResponse({"deleted_count": deleted_count}, status=200)
 
     payload = json.loads(request.body or "{}") if request.body else {}
@@ -215,6 +234,7 @@ def simulations_collection(request: HttpRequest) -> JsonResponse:
     date_fin = date.fromisoformat(date_fin_value)
 
     simulation = SimulationFraisKilometriques.objects.create(
+        owner_sub=_get_owner_sub(request) or "dev-bypass",
         annee_fiscale=annee_fiscale,
         date_debut_periode=date_debut,
         date_fin_periode=date_fin,
@@ -225,7 +245,7 @@ def simulations_collection(request: HttpRequest) -> JsonResponse:
 @csrf_exempt
 @require_http_methods(["GET", "DELETE"])
 def simulation_detail(request: HttpRequest, simulation_id: int) -> JsonResponse:
-    simulation = SimulationFraisKilometriques.objects.filter(id=simulation_id).first()
+    simulation = _get_simulation_or_none(request, simulation_id)
     if simulation is None:
         return JsonResponse({"detail": "Simulation introuvable."}, status=404)
 
@@ -239,7 +259,7 @@ def simulation_detail(request: HttpRequest, simulation_id: int) -> JsonResponse:
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def simulation_domicile(request: HttpRequest, simulation_id: int) -> JsonResponse:
-    simulation = SimulationFraisKilometriques.objects.filter(id=simulation_id).first()
+    simulation = _get_simulation_or_none(request, simulation_id)
     if simulation is None:
         return JsonResponse({"detail": "Simulation introuvable."}, status=404)
 
@@ -285,7 +305,7 @@ def simulation_domicile(request: HttpRequest, simulation_id: int) -> JsonRespons
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def simulation_sites(request: HttpRequest, simulation_id: int) -> JsonResponse:
-    simulation = SimulationFraisKilometriques.objects.filter(id=simulation_id).first()
+    simulation = _get_simulation_or_none(request, simulation_id)
     if simulation is None:
         return JsonResponse({"detail": "Simulation introuvable."}, status=404)
 
@@ -332,7 +352,7 @@ def simulation_sites(request: HttpRequest, simulation_id: int) -> JsonResponse:
 @csrf_exempt
 @require_http_methods(["DELETE"])
 def simulation_site_detail(request: HttpRequest, simulation_id: int, site_id: int) -> JsonResponse:
-    simulation = SimulationFraisKilometriques.objects.filter(id=simulation_id).first()
+    simulation = _get_simulation_or_none(request, simulation_id)
     if simulation is None:
         return JsonResponse({"detail": "Simulation introuvable."}, status=404)
 
@@ -347,7 +367,7 @@ def simulation_site_detail(request: HttpRequest, simulation_id: int, site_id: in
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def simulation_vehicules(request: HttpRequest, simulation_id: int) -> JsonResponse:
-    simulation = SimulationFraisKilometriques.objects.filter(id=simulation_id).first()
+    simulation = _get_simulation_or_none(request, simulation_id)
     if simulation is None:
         return JsonResponse({"detail": "Simulation introuvable."}, status=404)
 
@@ -402,7 +422,7 @@ def simulation_vehicules(request: HttpRequest, simulation_id: int) -> JsonRespon
 @csrf_exempt
 @require_http_methods(["DELETE"])
 def simulation_vehicule_detail(request: HttpRequest, simulation_id: int, vehicule_id: int) -> JsonResponse:
-    simulation = SimulationFraisKilometriques.objects.filter(id=simulation_id).first()
+    simulation = _get_simulation_or_none(request, simulation_id)
     if simulation is None:
         return JsonResponse({"detail": "Simulation introuvable."}, status=404)
 
@@ -417,7 +437,7 @@ def simulation_vehicule_detail(request: HttpRequest, simulation_id: int, vehicul
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def simulation_calendrier(request: HttpRequest, simulation_id: int) -> JsonResponse:
-    simulation = SimulationFraisKilometriques.objects.filter(id=simulation_id).first()
+    simulation = _get_simulation_or_none(request, simulation_id)
     if simulation is None:
         return JsonResponse({"detail": "Simulation introuvable."}, status=404)
 
@@ -491,7 +511,7 @@ def simulation_calendrier(request: HttpRequest, simulation_id: int) -> JsonRespo
 @csrf_exempt
 @require_http_methods(["DELETE"])
 def simulation_calendrier_detail(request: HttpRequest, simulation_id: int, jour_id: int) -> JsonResponse:
-    simulation = SimulationFraisKilometriques.objects.filter(id=simulation_id).first()
+    simulation = _get_simulation_or_none(request, simulation_id)
     if simulation is None:
         return JsonResponse({"detail": "Simulation introuvable."}, status=404)
 
@@ -506,7 +526,7 @@ def simulation_calendrier_detail(request: HttpRequest, simulation_id: int, jour_
 @csrf_exempt
 @require_http_methods(["POST"])
 def simulation_distance_site(request: HttpRequest, simulation_id: int, site_id: int) -> JsonResponse:
-    simulation = SimulationFraisKilometriques.objects.filter(id=simulation_id).first()
+    simulation = _get_simulation_or_none(request, simulation_id)
     if simulation is None:
         return JsonResponse({"detail": "Simulation introuvable."}, status=404)
 
@@ -528,7 +548,7 @@ def simulation_distance_site(request: HttpRequest, simulation_id: int, site_id: 
 @csrf_exempt
 @require_http_methods(["POST"])
 def simulation_import_calendrier(request: HttpRequest, simulation_id: int) -> JsonResponse:
-    simulation = SimulationFraisKilometriques.objects.filter(id=simulation_id).first()
+    simulation = _get_simulation_or_none(request, simulation_id)
     if simulation is None:
         return JsonResponse({"detail": "Simulation introuvable."}, status=404)
 
@@ -549,7 +569,7 @@ def simulation_import_calendrier(request: HttpRequest, simulation_id: int) -> Js
 
 @require_http_methods(["GET"])
 def simulation_resultat(request: HttpRequest, simulation_id: int) -> JsonResponse:
-    simulation = SimulationFraisKilometriques.objects.filter(id=simulation_id).first()
+    simulation = _get_simulation_or_none(request, simulation_id)
     if simulation is None:
         return JsonResponse({"detail": "Simulation introuvable."}, status=404)
 
@@ -567,7 +587,7 @@ def simulation_resultat(request: HttpRequest, simulation_id: int) -> JsonRespons
 @csrf_exempt
 @require_http_methods(["POST"])
 def simulation_recalculer(request: HttpRequest, simulation_id: int) -> JsonResponse:
-    simulation = SimulationFraisKilometriques.objects.filter(id=simulation_id).first()
+    simulation = _get_simulation_or_none(request, simulation_id)
     if simulation is None:
         return JsonResponse({"detail": "Simulation introuvable."}, status=404)
 
