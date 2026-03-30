@@ -66,19 +66,28 @@ function scheduleRefresh(): void {
 
 export const authService = {
   async init(): Promise<void> {
-    const authenticated = await keycloak.init({
-      onLoad: 'check-sso',
-      pkceMethod: 'S256',
-      checkLoginIframe: false,
-      redirectUri: window.location.origin,
-      silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso.html`,
-    });
+    try {
+      const authenticated = await keycloak.init({
+        onLoad: 'check-sso',
+        pkceMethod: 'S256',
+        checkLoginIframe: false,
+        redirectUri: window.location.origin,
+        silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso.html`,
+      });
 
-    if (authenticated) {
+      if (authenticated) {
+        syncAuthState();
+        scheduleRefresh();
+        return;
+      }
       syncAuthState();
-      scheduleRefresh();
-    } else {
-      syncAuthState();
+    } catch {
+      authenticated.set(false);
+      displayName.set('Compte');
+      if (refreshTimeout) {
+        clearTimeout(refreshTimeout);
+        refreshTimeout = null;
+      }
     }
   },
 

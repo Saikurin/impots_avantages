@@ -10,11 +10,8 @@ import { authService } from './app/core/auth/auth.service';
 
 registerLocaleData(localeFr);
 
-authService
-  .init()
-  .then(() =>
-    bootstrapApplication(AppComponent, {
-      providers: [provideRouter(appRoutes), { provide: LOCALE_ID, useValue: 'fr-FR' }],
-    }),
-  )
+bootstrapApplication(AppComponent, {
+  providers: [provideRouter(appRoutes), { provide: LOCALE_ID, useValue: 'fr-FR' }],
+})
+  .then(() => authService.init())
   .catch((error) => console.error(error));
