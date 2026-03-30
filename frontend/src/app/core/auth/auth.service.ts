@@ -100,7 +100,7 @@ export const authService = {
   displayName,
 
   async login(): Promise<void> {
-    await keycloak.login({ redirectUri: window.location.href });
+    await keycloak.login({ redirectUri: window.location.origin });
   },
 
   async logout(): Promise<void> {
