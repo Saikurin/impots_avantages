@@ -39,10 +39,47 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 ## Services exposes
 
-- frontend : port `80`
-- keycloak : port `8080`
+- frontend interne : `127.0.0.1:8081`
+- keycloak interne : `127.0.0.1:8080`
 
 Le frontend proxy automatiquement `/api/` vers le backend Gunicorn.
+
+## Reverse proxy recommande
+
+Le plus simple sur ton VPS est `Caddy`, car il genere automatiquement les certificats HTTPS.
+
+### Installation Caddy
+
+```bash
+apt update
+apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
+apt update
+apt install -y caddy
+```
+
+### Configuration Caddy
+
+Copier le fichier du repo :
+
+```bash
+cp infra/caddy/Caddyfile /etc/caddy/Caddyfile
+systemctl reload caddy
+```
+
+Ce fichier route :
+- `fisceo.theo-sikli.fr` -> `127.0.0.1:8081`
+- `auth.fisceo.theo-sikli.fr` -> `127.0.0.1:8080`
+
+### Verifications
+
+```bash
+systemctl status caddy
+caddy validate --config /etc/caddy/Caddyfile
+curl -I https://fisceo.theo-sikli.fr
+curl -I https://auth.fisceo.theo-sikli.fr
+```
 
 ## Notes importantes
 

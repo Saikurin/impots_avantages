@@ -29,7 +29,7 @@ services:
     volumes:
       - ./infra/keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
 
   backend:
     build:
@@ -65,7 +65,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "80:80"
+      - "127.0.0.1:8081:80"
 
 volumes:
   keycloak_db_data:
