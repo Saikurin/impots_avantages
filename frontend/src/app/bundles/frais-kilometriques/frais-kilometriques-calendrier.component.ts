@@ -100,7 +100,11 @@ type JourResponse = {
           }
         </div>
 
-        <full-calendar [options]="calendarOptions()" [deepChangeDetection]="true"></full-calendar>
+        <div class="calendar-shell">
+          <div class="calendar-frame">
+            <full-calendar [options]="calendarOptions()" [deepChangeDetection]="true"></full-calendar>
+          </div>
+        </div>
       </section>
 
       <section class="panel panel-form">
@@ -207,11 +211,14 @@ type JourResponse = {
       .summary-label { color: #537a96; font-size: .9rem; margin: 0 0 10px; }
       .summary-value { color: #16324a; font-size: 1.9rem; font-weight: 700; margin: 0; }
       .summary-card-accent .summary-label, .summary-card-accent .summary-value { color: #f5fbff; }
+      .calendar-shell { overflow-x: auto; padding-bottom: 4px; }
+      .calendar-frame { min-width: 760px; }
       .import-box { display: grid; gap: 12px; padding: 18px 20px; border-radius: 18px; background: #f7fafc; border: 1px solid rgba(22,50,74,.08); }
       .import-title { font-weight: 700; color: #16324a; }
       .import-copy { margin-top: 6px; color: #35546c; }
       .template-link { margin-top: 10px; display: inline-flex; color: #16324a; }
       .import-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+      .import-actions input { max-width: 100%; }
       .import-errors { display: grid; gap: 6px; }
       .legend { display: flex; gap: 18px; flex-wrap: wrap; }
       .legend-item { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
@@ -240,7 +247,21 @@ type JourResponse = {
       :host ::ng-deep .fc .fc-toolbar-title { font-size: 1.15rem; color: #16324a; }
       :host ::ng-deep .fc .fc-daygrid-event { border-radius: 999px; padding: 2px 8px; border: 0; }
       @media (max-width: 900px) { .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-      @media (max-width: 720px) { .page { padding: 18px; } .panel { padding: 24px; } .row, .summary-grid { grid-template-columns: 1fr; } .actions,.panel-head { flex-direction: column; align-items: stretch; } }
+      @media (max-width: 720px) {
+        .page { padding: 14px; }
+        .panel { padding: 18px; border-radius: 20px; }
+        .row, .summary-grid { grid-template-columns: 1fr; }
+        .actions, .panel-head, .cta-group, .import-actions { flex-direction: column; align-items: stretch; }
+        .button-link, button, a { width: 100%; }
+        .calendar-frame { min-width: 680px; }
+        :host ::ng-deep .fc .fc-toolbar { flex-direction: column; align-items: stretch; gap: 10px; }
+        :host ::ng-deep .fc .fc-toolbar-chunk { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
+        :host ::ng-deep .fc .fc-toolbar-title { font-size: 1rem; text-align: center; }
+        :host ::ng-deep .fc .fc-button { padding: 0.35em 0.65em; font-size: 0.85rem; }
+        :host ::ng-deep .fc .fc-col-header-cell-cushion,
+        :host ::ng-deep .fc .fc-daygrid-day-number { font-size: 0.82rem; }
+        :host ::ng-deep .fc .fc-daygrid-event { font-size: 0.72rem; }
+      }
     `,
   ],
 })
