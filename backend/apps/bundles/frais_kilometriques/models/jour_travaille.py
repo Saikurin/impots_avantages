@@ -30,6 +30,8 @@ class JourTravaille(models.Model):
     type_jour = models.CharField(max_length=20, choices=TypeJour.choices)
     distance_km = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     montant_eur = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    frais_cantine_eur = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    montant_deductible_cantine_eur = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     commentaire = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

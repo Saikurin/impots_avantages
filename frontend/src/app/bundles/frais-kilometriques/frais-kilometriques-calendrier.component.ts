@@ -28,6 +28,8 @@ type JourResponse = {
   vehicule_id: number | null;
   distance_km: number;
   montant_eur: number;
+  frais_cantine_eur: number;
+  montant_deductible_cantine_eur: number;
   commentaire: string;
 };
 
@@ -114,6 +116,7 @@ type JourResponse = {
             <h2>{{ selectedRangeLabel() }}</h2>
             @if (selectedJour()) {
               <p class="detail-km">Kilometres enregistres : {{ selectedJour()!.distance_km }} km</p>
+              <p class="detail-km">Cantine deductible : {{ selectedJour()!.montant_deductible_cantine_eur }} EUR</p>
             }
           </div>
           @if (selectedJour()) {
@@ -165,6 +168,16 @@ type JourResponse = {
                 </select>
               </label>
             </div>
+
+            <label>
+              <span>Frais cantine du jour</span>
+              <input [(ngModel)]="form.frais_cantine_eur" name="frais_cantine_eur" type="number" min="0" step="0.01" />
+            </label>
+
+            <p class="canteen-hint">
+              Montant deductible estime : {{ deductibleCantinePreview() }} EUR
+              (part superieure a 5.20 EUR)
+            </p>
           }
 
           <label>
@@ -227,6 +240,7 @@ type JourResponse = {
       .dot.teletravail { background: #2d9b62; }
       .dot.conges { background: #8a6fb3; }
       .panel-form { display: grid; gap: 24px; }
+      .canteen-hint { color: #537a96; font-size: .92rem; margin: -4px 0 0; }
       .panel-head { display: flex; justify-content: space-between; align-items: start; gap: 16px; }
       .form { display: grid; gap: 16px; }
       label { display: grid; gap: 8px; }
@@ -302,6 +316,7 @@ export class FraisKilometriquesCalendrierComponent {
     type_jour: 'site',
     site_travail_id: null as number | null,
     vehicule_id: null as number | null,
+    frais_cantine_eur: 0,
     commentaire: '',
   };
 
@@ -385,9 +400,11 @@ export class FraisKilometriquesCalendrierComponent {
   protected onTypeJourChange(): void {
     if (this.form.type_jour === 'teletravail') {
       this.form.site_travail_id = null;
+      this.form.frais_cantine_eur = 0;
     } else if (this.form.type_jour === 'conges') {
       this.form.site_travail_id = null;
       this.form.vehicule_id = null;
+      this.form.frais_cantine_eur = 0;
     } else if (!this.form.site_travail_id && this.sites().length) {
       this.form.site_travail_id = this.sites()[0].id;
     }
@@ -412,9 +429,10 @@ export class FraisKilometriquesCalendrierComponent {
           body: JSON.stringify({
             ...this.form,
             date: currentDate,
-          site_travail_id: this.form.type_jour === 'site' ? this.form.site_travail_id : null,
-          vehicule_id: this.form.type_jour === 'conges' ? null : this.form.vehicule_id,
-        }),
+            site_travail_id: this.form.type_jour === 'site' ? this.form.site_travail_id : null,
+            vehicule_id: this.form.type_jour === 'conges' ? null : this.form.vehicule_id,
+            frais_cantine_eur: this.form.type_jour === 'site' ? this.form.frais_cantine_eur : 0,
+          }),
         });
         if (!response.ok) {
           const payload = (await response.json()) as { detail?: string };
@@ -506,6 +524,7 @@ export class FraisKilometriquesCalendrierComponent {
     this.form.date_fin = '';
     this.form.type_jour = 'site';
     this.form.commentaire = '';
+    this.form.frais_cantine_eur = 0;
     this.form.site_travail_id = this.sites().length ? this.sites()[0].id : null;
     this.form.vehicule_id = this.vehicules().length ? this.vehicules()[0].id : null;
   }
@@ -530,8 +549,14 @@ export class FraisKilometriquesCalendrierComponent {
     this.form.type_jour = jour?.type_jour ?? 'site';
     this.form.site_travail_id = jour?.site_travail_id ?? (this.sites().length ? this.sites()[0].id : null);
     this.form.vehicule_id = jour?.vehicule_id ?? (this.vehicules().length ? this.vehicules()[0].id : null);
+    this.form.frais_cantine_eur = jour?.frais_cantine_eur ?? 0;
     this.form.commentaire = jour?.commentaire ?? '';
     this.onTypeJourChange();
+  }
+
+  protected deductibleCantinePreview(): string {
+    const amount = Number(this.form.frais_cantine_eur || 0);
+    return Math.max(amount - 5.2, 0).toFixed(2);
   }
 
   private buildSelectedDates(): string[] {

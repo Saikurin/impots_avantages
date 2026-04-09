@@ -53,6 +53,8 @@ class ResultatApiTests(TestCase):
             type_jour=JourTravaille.TypeJour.SITE,
             distance_km=Decimal("50.00"),
             montant_eur=Decimal("0.00"),
+            frais_cantine_eur=Decimal("8.00"),
+            montant_deductible_cantine_eur=Decimal("2.80"),
         )
         JourTravaille.objects.create(
             simulation=self.simulation,
@@ -74,6 +76,8 @@ class ResultatApiTests(TestCase):
         self.assertEqual(payload["totaux"]["jours_site"], 1)
         self.assertEqual(payload["totaux"]["jours_conges"], 1)
         self.assertEqual(payload["totaux"]["total_km"], 50.0)
+        self.assertEqual(payload["totaux"]["total_cantine_deductible_eur"], 2.8)
+        self.assertEqual(payload["totaux"]["total_deductible_global_eur"], 37.65)
 
     def test_resultat_aggregates_amounts_per_vehicle(self):
         response = self.client.get(
@@ -84,3 +88,4 @@ class ResultatApiTests(TestCase):
         payload = response.json()
         self.assertEqual(len(payload["vehicules"]), 2)
         self.assertAlmostEqual(payload["totaux"]["montant_total_eur"], 98.45, places=2)
+        self.assertAlmostEqual(payload["totaux"]["total_deductible_global_eur"], 101.25, places=2)
